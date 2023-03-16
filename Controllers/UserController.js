@@ -139,6 +139,7 @@ const Protect = async(req, res)=>{
             if(err){
                 return res.status(401).json({message:"Your session has expired"})
             }
+
             req.user = {
                 id: decoded.id,
                 email: decoded.email
@@ -146,9 +147,21 @@ const Protect = async(req, res)=>{
         })
         next()
     }catch{
-
+        res.status(500).json({ Message: "Server Error" })
     }
 }
+
+//@desc Retrieve User-specific object
+const getUser = async(req,res)=>{
+    try{
+        
+        const user = await User.findById(req.user.id)
+        res.status(200).json({ user })
+    }catch(e){
+        return res.status(400).json({message: "User not found"})
+    }
+}
+
 
 module.exports = {
     registerUser,
@@ -156,5 +169,6 @@ module.exports = {
     savedProperties,
     viewedProperties,
     Protect,
+    getUser,
 }
 
