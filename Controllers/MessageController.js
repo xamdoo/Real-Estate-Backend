@@ -1,4 +1,4 @@
-const Message = require("../Models/MessageModel")
+const Message = require("../Models/MessageModel");
 
 
 //@desc Adding a new message to an existing chat.
@@ -30,7 +30,8 @@ const getMessages = async(req, res)=>{
     }
 }
 
+
 module.exports = {
-    addMessage,
-    getMessages,
-}
+  addMessage,
+  getMessages,
+};
