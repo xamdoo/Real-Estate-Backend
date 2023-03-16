@@ -1,13 +1,16 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
-const ChatSchema = mongoose.Schema({
+const ChatSchema = mongoose.Schema(
+  {
     members: {
-        type: Array,
+      type: Array,
     },
-},{
+  },
+  {
     timestamps: true,
-})
+  }
+);
 
-const ChatModel = mongoose.model('Chat', ChatSchema)
+const ChatModel = mongoose.model("Chat", ChatSchema);
 
-module.exports = ChatModel
+module.exports = ChatModel;
