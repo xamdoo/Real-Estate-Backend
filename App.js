@@ -2,6 +2,8 @@ const express = require('express')
 const dotenv = require("dotenv")
 const cors = require('cors')
 
+
+const UserRoute = require('./Routes/UserRoute')
 const ChatRoute = require('./Routes/ChatRoute')
 const MessageRoute = require('./Routes/MessageRoute')
 
@@ -15,6 +17,7 @@ require("./server")
 
 app.use(cors())
 
+app.use("/users", UserRoute)
 app.use("/chat", ChatRoute)
 app.use("/message", MessageRoute)
 
