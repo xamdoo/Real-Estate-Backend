@@ -1,4 +1,4 @@
-const Chat = require("../Models/ChatModel")
+const Chat = require("../Models/ChatModel");
 
 
 //@desc Creating a new chat from getting instance from chatModel
@@ -7,13 +7,14 @@ const createChat = async(req, res)=>{
         members: [req.body.senderId, req.body.receiverId]
     });
 
-    try{
-        const result = await newChat.save()
-        res.status(200).json(result)
-    }catch(error){
-        res.status(500).json(error)
-    }
-}
+  try {
+    const result = await newChat.save();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
 
 //@desc Find all chats that involve the user with the ID specified
 const userChats = async(req, res)=>{
@@ -42,7 +43,7 @@ const findChat = async(req, res)=>{
 }
 
 module.exports = {
-    createChat,
-    userChats,
-    findChat
-}
+  createChat,
+  userChats,
+  findChat,
+};

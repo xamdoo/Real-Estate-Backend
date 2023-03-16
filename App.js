@@ -1,26 +1,28 @@
-const express = require('express')
-const dotenv = require("dotenv")
-const cors = require('cors')
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
 
 
 const UserRoute = require('./Routes/UserRoute')
-const ChatRoute = require('./Routes/ChatRoute')
-const MessageRoute = require('./Routes/MessageRoute')
+const ChatRoute = require("./Routes/ChatRoute");
+const MessageRoute = require("./Routes/MessageRoute");
+const contactRoute = require("./Routes/contactRoute");
+const propertyRoute = require("./Routes/propertyRoute");
 
 
-const app = express()
-app.use(express.json())
+const app = express();
+app.use(express.json());
 
+dotenv.config({ path: "./.env" });
+require("./server");
 
-dotenv.config({path:"./.env"})
-require("./server")
-
-app.use(cors())
+app.use(cors());
 
 app.use("/users", UserRoute)
-app.use("/chat", ChatRoute)
-app.use("/message", MessageRoute)
-
+app.use("/chat", ChatRoute);
+app.use("/message", MessageRoute);
+app.use("/info", contactRoute);
+app.use("/propertyInfo", propertyRoute);
 
 
 
