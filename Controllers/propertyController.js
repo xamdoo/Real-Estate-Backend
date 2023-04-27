@@ -1,43 +1,135 @@
 const propModel = require("../Models/propertyModel");
+const cloudinary = require("../Utilis/cloudinary");
+// const multiPart = require("connect-multiparty");
+// const multiPartMiddleWare = multiPart();
 
 const houseList = async (req, res) => {
   try {
-    const houseList = await propModel.find().populate("owner");
+    const houseList = await propModel.find();
+
     res.status(200).json({ MESSAGE: "here is your list", houseList });
   } catch {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF HOUSES " });
   }
 };
 
+const rentHouses = async (req, res) => {
+  try {
+    const houseList = await propModel.find().sort({ createdAt: -1 });
+    const rentHouses = houseList.filter((found, index) => {
+      if (found.contract == "rent") {
+        return found;
+      }
+    });
+
+    res.status(200).json({ MESSAGE: "the rent houses", rentHouses });
+  } catch {
+    res.status(400).json({ ERROR: "from rent " });
+  }
+};
+
+const saleHouses = async (req, res) => {
+  try {
+    const houseList = await propModel.find().sort({ createdAt: -1 });
+    const saleHouses = houseList.filter((found, index) => {
+      if (found.contract == "sale") {
+        return found;
+      }
+    });
+
+    res.status(200).json({ MESSAGE: "the sale houses", saleHouses });
+  } catch {
+    res.status(400).json({ ERROR: "from sale " });
+  }
+};
+
 const oneHouse = async (req, res) => {
   const houseID = req.params.id;
+
   try {
-    const oneHouse = await propModel.findById(houseID).populate("owner");
-    res.status(200).json({ MESSAGE: "Here is your house", oneHouse });
+    const oneProp = await propModel.findById(houseID).populate("ownerID");
+    console.log(oneProp);
+    res.status(200).json({ MESSAGE: " here is your house", oneProp });
   } catch {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF HOUSE (one) " });
   }
 };
 
 const postHouse = async (req, res) => {
+  const {
+    propertyType,
+    bedrooms,
+    price,
+    squareFT,
+    bathroom,
+    yearBuilt,
+    status,
+    location,
+    refrenceNo,
+    contract,
+    image,
+    //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..."
+    ownerID,
+    HomeSecurity,
+    ACRooms,
+    HightSpeedWifi,
+    /////
+    descriptionProp,
+  } = req.body;
+
   if (
-    !req.body.propertylocation ||
-    !req.body.propertyType ||
-    !req.body.priceFrom ||
-    !req.body.priceTo ||
-    !req.body.squareFt ||
-    !req.body.discription ||
-    !req.body.feature ||
-    !req.body.image
+    !propertyType ||
+    !bedrooms ||
+    !price ||
+    !squareFT ||
+    !bathroom ||
+    !yearBuilt ||
+    !status ||
+    !location ||
+    !refrenceNo ||
+    !contract
   ) {
-    return res.status(400).json({ ERROR: "please fill the form" });
+    return res.status(400).json({ ERROR: "please fill the required fields" });
+  }
+
+  if (propertyType.length > 25) {
+    return res
+      .status(400)
+      .json({ ERROR: "maximum  character's allowed  is 10 " });
   }
 
   try {
-    await propModel.create(req.body);
-    res.status(200).json({ MESSAGE: "submited your form " });
+    //UPLOADING THE IMAGE TO CLOUDINARY
+    const result = await cloudinary.uploader.upload(image, {
+      //FOLDER NAME WILL BE "propertyImages"
+      folder: "propertyImages",
+    });
+
+    await propModel.create({
+      propertyType,
+      bedrooms,
+      price,
+      squareFT,
+      bathroom,
+      yearBuilt,
+      status,
+      location,
+      refrenceNo,
+      contract,
+      image: {
+        public_id: result.public_id,
+        url: result.url,
+      },
+      //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..." FOR NOW IT'S SOME OF IT
+      ownerID,
+      HomeSecurity,
+      ACRooms,
+      HightSpeedWifi,
+      descriptionProp,
+    });
+    res.status(200).json({ MESSAGE: "created your property " });
   } catch (e) {
-    res.status(400).json({ ERROR: "ERROR FROM CREATE HOUSE ", e });
+    res.status(400).json({ ERROR: "ERROR FROM CREATE HOUSE " });
     console.log(e);
   }
 };
@@ -45,37 +137,31 @@ const postHouse = async (req, res) => {
 const updateHouse = async (req, res) => {
   const houseID = req.params.id;
 
-  const houseList = await propModel.findById(houseID);
+  const prevModel = await propModel.findById(houseID);
+  //checking if the id is exists
+  if (!prevModel) {
+    return res.status(400).json({ ERROR: "property not found !!!" });
+  }
 
   const valueToUpdate = {
-    propertylocation: req.body.propertylocation || propModel.propertylocation,
-    propertyType: req.body.propertyType || propModel.propertyType,
-    priceFrom: req.body.priceFrom || propModel.priceFrom,
-    priceTo: req.body.priceTo || propModel.priceTo,
-    squareFt: req.body.squareFt || propModel.squareFt,
-    discription: req.body.discription || propModel.discription,
-    feature: {
-      balcony: req.body.feature.balcony || houseList.feature.balcony,
-      yearBuilt: req.body.feature.yearBuilt || houseList.feature[0].yearBuilt,
-      status: req.body.feature.status || houseList.feature[0].status,
-      contract: req.body.feature.contract || houseList.feature[0].contract,
-      type: req.body.feature.type || houseList.feature[0].type,
-      homeArea: req.body.feature.homeArea || houseList.feature[0].homeArea,
-      rooms: req.body.feature.rooms || houseList.feature[0].rooms,
-      bedrooms: req.body.feature.bedrooms || houseList.feature[0].bedrooms,
-      baths: req.body.feature.baths || houseList.feature[0].baths,
-      garages: req.body.feature.garages || houseList.feature[0].garages,
-      material: req.body.feature.material || houseList.feature[0].material,
-      sold: req.body.feature.sold || houseList.feature[0].sold,
-      reference: req.body.feature.reference || houseList.feature[0].reference,
-      contactName:
-        req.body.feature.contactName || houseList.feature[0].contactName,
-      price: req.body.feature.price || houseList.feature[0].price,
-    },
-    image: req.body.image || propModel.image,
+    propertyType: req.body.propertyType || prevModel.propertyType,
+    bedroom: req.body.bedroom || prevModel.bedroom,
+    squareFT: req.body.squareFT || prevModel.squareFT,
+    price: req.body.price || prevModel.price,
+    bathroom: req.body.bathroom || prevModel.bathroom,
+    balcony: req.body.balcony || prevModel.balcony,
+    yearBuilt: req.body.yearBuilt || prevModel.yearBuilt,
+    status: req.body.status || prevModel.status,
+    lift: req.body.lift || prevModel.lift,
+    location: req.body.location || prevModel.location,
+    refrenceNo: req.body.refrenceNo || prevModel.refrenceNo,
+    garage: req.body.garage || prevModel.garage,
+    contract: req.body.contract || prevModel.contract,
   };
+
   try {
     await propModel.findByIdAndUpdate(houseID, valueToUpdate);
+
     res.status(200).json({ MESSAGE: "successfully updated!!" });
   } catch (e) {
     res.status(400).json({ ERROR: "error from updating House", e });
@@ -83,9 +169,13 @@ const updateHouse = async (req, res) => {
 };
 
 const deleteHouse = async (req, res) => {
+  const houseID = req.params.id;
   try {
-    const houseID = req.params.id;
-    await propModel.findByIdAndDelete(houseID);
+    const founded = await propModel.findByIdAndDelete(houseID);
+    //checking if the id is exists
+    if (!founded) {
+      return res.status(400).json({ MESSAGE: "property not found !!" });
+    }
     res.status(200).json({ MESSAGE: "successfully deleted!!" });
   } catch {
     res.status(400).json({ ERROR: "error from deleting House" });
@@ -98,4 +188,6 @@ module.exports = {
   postHouse,
   updateHouse,
   deleteHouse,
+  rentHouses,
+  saleHouses,
 };
