@@ -17,21 +17,25 @@ const UserSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    phone: {
-        type: Number,
-        required: false
-    },
+    phone: Number,
+    address: String,
+    file: String,
     savedProperties:  [{
         propertyId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Property',
+            ref: 'propertyModel',
             required: true
         },
     }],
+    is_agent: {
+        type: Boolean, 
+        default: false,
+        required: true
+    },
     viewedProperties:  [{
         propertyId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Property',
+            ref: 'propertyModel',
             required: true
         },
         viewedAt: {
@@ -39,6 +43,7 @@ const UserSchema = mongoose.Schema({
             default: Date.now
         }
     }],
+    
 },{
     timestamps: true
 })

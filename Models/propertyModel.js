@@ -20,7 +20,7 @@ const propertySchema = mongoose.Schema(
       type: Number,
     },
 
-    discription: {
+    description: {
       type: String,
     },
 
