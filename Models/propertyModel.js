@@ -2,90 +2,145 @@ const mongoose = require("mongoose");
 
 const propertySchema = mongoose.Schema(
   {
+    //
     propertyType: {
+      required: true,
       type: String,
+      maxLength: 25,
+      trim: true,
     },
-
-    propertylocation: {
-      type: String,
-    },
-    priceFrom: {
+    //
+    bedrooms: {
+      required: true,
       type: Number,
     },
-    priceTo: {
-      type: Number,
-    },
-
-    squareFt: {
-      type: Number,
-    },
-
-    description: {
+    //
+    squareFT: {
+      required: true,
       type: String,
+      trim: true,
+    },
+    //
+    price: {
+      required: true,
+      type: Number,
+    },
+    //
+    bathroom: {
+      required: true,
+      type: Number,
+    },
+    //
+    balcony: {
+      type: Number,
+    },
+    //
+    yearBuilt: {
+      required: true,
+      type: Number,
+    },
+    //
+    status: {
+      required: true,
+      type: String,
+      trim: true,
+    },
+    //
+    lift: {
+      type: Number,
+    },
+    //
+    location: {
+      required: true,
+      type: String,
+      trim: true,
+    },
+    //
+    descriptionProp: {
+      type: String,
+      minLength: 20,
+      trim: true,
+    },
+    //
+    refrenceNo: {
+      required: true,
+      type: Number,
     },
 
-    feature: [
-      {
-        balcony: {
-          type: Number,
-        },
-        yearBuilt: {
-          type: Number,
-        },
-        status: {
-          type: String,
-        },
-        contract: {
-          type: String,
-        },
-        type: {
-          type: String,
-        },
-        homeArea: {
-          type: Number,
-        },
-        rooms: {
-          type: Number,
-        },
-        bedrooms: {
-          type: Number,
-        },
-        baths: {
-          type: Number,
-        },
-        garages: {
-          type: Number,
-        },
-        beds: {
-          type: Number,
-        },
-        material: {
-          type: String,
-        },
-        sold: {
-          type: String,
-        },
-        reference: {
-          type: Number,
-        },
-        contactName: {
-          type: String,
-          required: true,
-        },
-        price: {
-          type: Number,
-          required: true,
-        },
-      },
-    ],
-
-    image: {
+    garage: {
+      type: Number,
+    },
+    contract: {
       type: String,
       required: true,
+      trim: true,
+      lowercase: true,
     },
-    owner: {
+    ownerID: {
       type: mongoose.Types.ObjectId,
-      ref: "owner",
+      ref: "ownerModel",
+    },
+
+    //AMENITIES
+    FullyFurnished: {
+      type: Boolean,
+
+      default: false,
+    },
+    QueitSaroudings: {
+      type: Boolean,
+
+      default: false,
+    },
+    BathHub: {
+      type: Boolean,
+
+      default: false,
+    },
+    NoSmookingRooms: {
+      type: Boolean,
+
+      default: false,
+    },
+
+    FireExtinguish: {
+      type: Boolean,
+
+      default: false,
+    },
+
+    HomeSecurity: {
+      type: Boolean,
+
+      default: false,
+    },
+
+    ACRooms: {
+      type: Boolean,
+
+      default: false,
+    },
+
+    HightSpeedWifi: {
+      type: Boolean,
+
+      default: false,
+    },
+
+    Oven: {
+      type: Boolean,
+
+      default: false,
+    },
+    image: {
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
     },
   },
   {

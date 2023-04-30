@@ -1,6 +1,5 @@
 const Chat = require("../Models/ChatModel");
 
-
 //@desc Creating a new chat from getting instance from chatModel
 const createChat = async(req, res)=>{
     const {senderId, receiverId} = req.body
@@ -24,7 +23,6 @@ const createChat = async(req, res)=>{
         res.status(500).json(error);
     }
 };
-
 
 //@desc Find all chats that involve the user with the ID specified
 const userChats = async(req, res)=>{
