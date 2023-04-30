@@ -6,7 +6,7 @@ const io = require('./Socket/SocketServer');
 const http = require('http')
 const { errorHandler } = require('./Middlewares/errorMiddleware')
 
-const UserRoute = require('./Routes/UserRoute')
+
 var bodyParser = require("body-parser");
 
 const UserRoute = require("./Routes/UserRoute");
@@ -38,8 +38,6 @@ io.attach(server)
 app.use(errorHandler)
 
 app.use("/auth", UserRoute)
-app.use("/users", UserRoute);
-
 app.use("/chat", ChatRoute);
 app.use("/message", MessageRoute);
 app.use("/info", contactRoute);

@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt")
 const jwt = require('jsonwebtoken')
 const { Error } = require("mongoose")
 const validator = require('validator')
+const cloudinary = require("../Utilis/cloudinary");
+
 
 
 
@@ -21,7 +23,7 @@ const registerUser = async(req,res)=>{
         const capitalizedStr = str.map((str)=>{
             return str.trim().charAt(0).toUpperCase() + str.slice(1);
         }) 
-        const captalizeFirstLetter = capitalizedStr.join(' ')
+        const capitalizeFirstLetter = capitalizedStr.join(' ')
         
         //validate input data        
         if(!name || !email || !password){
@@ -29,7 +31,7 @@ const registerUser = async(req,res)=>{
         }
 
     if (!validator.isEmail(email)) {
-      return res.status(400).json({ message: "Invalid email address" });
+        return res.status(400).json({ message: "Invalid email address" });
     }
 
         if(password.length < 6){
@@ -48,7 +50,7 @@ const registerUser = async(req,res)=>{
 
         //create user
         await User.create({
-            name: captalizeFirstLetter,
+            name: capitalizeFirstLetter,
             email,
             phone: req.body.phone,
             password: hashedPassword,
@@ -58,6 +60,7 @@ const registerUser = async(req,res)=>{
         res.status(200).json({message: "You've created an account"})
     }catch(e){
         res.status(500).json({message:"There was an error!"})
+        console.log(e)
     }
 };
 
@@ -66,29 +69,29 @@ const registerUser = async(req,res)=>{
 
 //@desc Authenticate User
 const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
 
-    // Validate input
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
-    }
-    if (!validator.isEmail(email)) {
-      return res.status(400).json({ message: "Invalid email address" });
-    }
+        // Validate input
+        if (!email || !password) {
+            return res
+            .status(400)
+            .json({ message: "Email and password are required" });
+        }
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({ message: "Invalid email address" });
+        }
 
-    //check user email and password
-    const findUser = await User.findOne({ email });
-    if (!findUser) {
-      return res.status(400).json({ message: "Email/Password is incorrect" });
-    }
+        //check user email and password
+        const findUser = await User.findOne({ email });
+        if (!findUser) {
+            return res.status(400).json({ message: "Email/Password is incorrect" });
+        }
 
-    const isPasswordMatch = await bcrypt.compare(password, findUser.password);
-    if (!isPasswordMatch) {
-      return res.status(400).json({ message: "Email/Password is incorrect" });
-    }
+        const isPasswordMatch = await bcrypt.compare(password, findUser.password);
+        if (!isPasswordMatch) {
+            return res.status(400).json({ message: "Email/Password is incorrect" });
+        }
 
 
         const token = createToken(findUser._id)
@@ -99,6 +102,8 @@ const loginUser = async (req, res) => {
                 email, 
                 phone: findUser.phone,
                 agent: findUser.is_agent,
+                address: findUser.address,
+                image: findUser.image,
                 token
             })
     }catch{
@@ -108,29 +113,50 @@ const loginUser = async (req, res) => {
 
 //@desc Edit User Profile 
 const editProfile = async(req, res)=>{
-        try {
-            const { id } = req.params
-            const user = await User.findById(id)
-    
-            if (!user) {
-                return res.status(400).json({ message: "User not found" });
-            }
-    
-            // let file = user.file || '';
-            // if (req.file) {
-            //     file = req.file.filename;
-            // }
-    
-            user.name = req.body.name;
-            user.address = req.body.address;
-            user.phone = req.body.phone;
-            user.file = file;
-            await user.save();
-            return res.status(200).json({ message: "Profile updated successfully" });
-    }catch(e){
+    try {
+        const { id } = req.params
+        const user = await User.findById(id)
+
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
+        }
+
+        const {name, address, phone } = req.body
+
+        
+        // Capitalize the first letter of each word in name and address
+        const capitalizeFirstLetter = (str) => {
+            const words = str.split(' ');
+            return words.map((word) => {
+                return word.trim().charAt(0).toUpperCase() + word.slice(1);
+            }).join(' ');
+        };
+        
+        user.name = capitalizeFirstLetter(name)
+        user.address = capitalizeFirstLetter(address)
+        user.phone = phone
+
+        const result = await cloudinary.uploader.upload(`data:image/jpeg;base64,${req.body.image}`, {
+            folder: 'userProfile'
+        });
+        user.image = {
+            public_id: result.public_id,
+            url: result.url,
+        };     
+        
+        await user.save();
+
+        const { password, confirmPassword, savedProperties, viewedProperties, is_agent,   ...userData } = user._doc;
+
+        return res.status(200).json({ message: "Profile updated successfully", userData
+        });
+
+    } catch(e) {
         console.log(e)
+        return res.status(500).json({ message: 'Server error' });
     }
 }
+
 
 const changePassword = async(req,res)=>{
     
@@ -176,13 +202,8 @@ const savedProperties = async(req, res)=>{
     }catch{
         return res.status(500).json({ message:'Error retrieving saved properties' })
     }
-    res.status(200).json({ savedProperties });
-  } catch {
-    return res
-      .status(500)
-      .json({ message: "Error retrieving saved properties" });
-  }
-};
+}
+
 
 //@desc Update user's Viewed Properties
 const viewedProperties = async(req, res)=>{
@@ -259,13 +280,8 @@ const deleteViewedProperty = async (req, res) =>{
     }catch(e){
         return res.status(500).json({ message:'Error deleting the item' })
     }
-    res.status(200).json({ viewedProperties });
-  } catch {
-    return res
-      .status(500)
-      .json({ message: "Error retrieving viewed properties" });
-  }
-};
+}; 
+
 
 //@desc Protect Middleware to Authenticate user
 const protect = async(req, res, next)=>{

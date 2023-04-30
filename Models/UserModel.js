@@ -1,26 +1,32 @@
 const mongoose = require("mongoose");
 
-const UserSchema = mongoose.Schema(
-  {
+const UserSchema = mongoose.Schema({
     name: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
     email: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
     password: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
     confirmPassword: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
     phone: Number,
     address: String,
-    file: String,
+    image: {
+        public_id: {
+            type: String,
+        },
+        url: {
+            type: String,
+        },
+    },
     savedProperties:  [{
         propertyId: {
             type: mongoose.Schema.Types.ObjectId,
