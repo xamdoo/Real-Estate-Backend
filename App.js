@@ -1,6 +1,12 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const port = process.env.PORT || 3000
+const io = require('./Socket/SocketServer');
+const http = require('http')
+const { errorHandler } = require('./Middlewares/errorMiddleware')
+
+
 var bodyParser = require("body-parser");
 
 const UserRoute = require("./Routes/UserRoute");
@@ -19,14 +25,28 @@ require("./server");
 
 app.use(cors());
 
-app.use("/users", UserRoute);
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
 
+const server = http.createServer(app)
+io.attach(server)
+
+
+app.use(errorHandler)
+
+app.use("/auth", UserRoute)
 app.use("/chat", ChatRoute);
 app.use("/message", MessageRoute);
 app.use("/propertyInfo", propertyRoute); //ME
 app.use("/recommendation", recoRoute); // ME
 app.use("/owner", ownerRoute); // ME
 
-app.listen(3002, () => {
-  console.log("Listening on port 3002");
-});
+
+
+
+server.listen(port, ()=>{
+    console.log(`Listening on port ${port}`)
+})
+
