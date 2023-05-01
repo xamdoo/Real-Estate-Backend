@@ -1,5 +1,6 @@
 const ownerModel = require("../Models/contactModel");
 const bcrypt = require("bcrypt");
+const validator = require("validator");
 
 const getOwners = async (req, res) => {
   try {
@@ -23,11 +24,27 @@ const getOneOwner = async (req, res) => {
 };
 
 const postOwner = async (req, res) => {
-  const codeCountry = "+252";
   try {
     const { firstName, lastName, phone, email, password, schedule, image } =
       req.body;
 
+    if (!firstName || !lastName || !phone || !email || !password || !schedule) {
+      return res.status(401).json({ ERROR: "fill the form first" });
+    }
+
+    const findOwner = await ownerModel.findOne({ email });
+
+    if (findOwner) {
+      return res.status(401).json({ ERROR: "this email is already taken" });
+    }
+
+    if (!validator.isEmail(email)) {
+      return res.status(401).json({ ERROR: "invalid email address" });
+    }
+
+    if (password.length < 6) {
+      return res.status(401).json({ ERROR: "password must be 6 character " });
+    }
     const encryptedPassword = await bcrypt.hash(password, 10);
 
     const ownerForm = {
@@ -41,9 +58,9 @@ const postOwner = async (req, res) => {
     };
 
     const ownerInfo = await ownerModel.create(ownerForm);
-    res.status(200).json({ message: "You've created successfully", ownerInfo });
-  } catch {
-    res.status(400).json({ error: "please fill the form" });
+    res.status(201).json({ message: "You've created successfully" });
+  } catch (e) {
+    res.status(500).json({ error: "OOPS something wrong", e });
   }
 };
 
