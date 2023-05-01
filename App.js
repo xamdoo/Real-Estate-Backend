@@ -6,7 +6,6 @@ var bodyParser = require("body-parser");
 const UserRoute = require("./Routes/UserRoute");
 const ChatRoute = require("./Routes/ChatRoute");
 const MessageRoute = require("./Routes/MessageRoute");
-const contactRoute = require("./Routes/contactRoute");
 const propertyRoute = require("./Routes/propertyRoute");
 const recoRoute = require("./Routes/recoRoute");
 const ownerRoute = require("./Routes/ownerRoute");
@@ -24,10 +23,9 @@ app.use("/users", UserRoute);
 
 app.use("/chat", ChatRoute);
 app.use("/message", MessageRoute);
-app.use("/info", contactRoute);
-app.use("/propertyInfo", propertyRoute);
-app.use("/recommendation", recoRoute);
-app.use("/owner", ownerRoute);
+app.use("/propertyInfo", propertyRoute); //ME
+app.use("/recommendation", recoRoute); // ME
+app.use("/owner", ownerRoute); // ME
 
 app.listen(3002, () => {
   console.log("Listening on port 3002");

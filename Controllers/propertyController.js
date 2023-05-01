@@ -7,7 +7,7 @@ const houseList = async (req, res) => {
   try {
     const houseList = await propModel.find();
 
-    res.status(200).json({ MESSAGE: "here is your list", houseList });
+    res.status(200).json({ houseList });
   } catch {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF HOUSES " });
   }
@@ -17,7 +17,7 @@ const rentHouses = async (req, res) => {
   try {
     const houseList = await propModel.find().sort({ createdAt: -1 });
     const rentHouses = houseList.filter((found, index) => {
-      if (found.contract == "rent") {
+      if (found.contract === "rent") {
         return found;
       }
     });
@@ -32,7 +32,7 @@ const saleHouses = async (req, res) => {
   try {
     const houseList = await propModel.find().sort({ createdAt: -1 });
     const saleHouses = houseList.filter((found, index) => {
-      if (found.contract == "sale") {
+      if (found.contract === "sale") {
         return found;
       }
     });
@@ -48,7 +48,7 @@ const oneHouse = async (req, res) => {
 
   try {
     const oneProp = await propModel.findById(houseID).populate("ownerID");
-    console.log(oneProp);
+
     res.status(200).json({ MESSAGE: " here is your house", oneProp });
   } catch {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF HOUSE (one) " });
@@ -67,7 +67,7 @@ const postHouse = async (req, res) => {
     location,
     refrenceNo,
     contract,
-    image,
+    images,
     //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..."
     ownerID,
     HomeSecurity,
@@ -99,39 +99,54 @@ const postHouse = async (req, res) => {
   }
 
   try {
-    //UPLOADING THE IMAGE TO CLOUDINARY
-    const result = await cloudinary.uploader.upload(image, {
-      //FOLDER NAME WILL BE "propertyImages"
-      folder: "propertyImages",
-    });
+    let images = [...req.body.images];
+    let imagesBuffer = [];
 
-    await propModel.create({
-      propertyType,
-      bedrooms,
-      price,
-      squareFT,
-      bathroom,
-      yearBuilt,
-      status,
-      location,
-      refrenceNo,
-      contract,
-      image: {
+    // //LOOPING TO ADD THE ABOVE VARIBALE EVERY IMAGE OF THAT PROPERTY IMAGES TO SAVE ONE TIME
+    for (let i = 0; i < images.length; i++) {
+      //UPLOADING THE IMAGES TO CLOUDINARY
+      const result = await cloudinary.uploader.upload(images[i], {
+        //FOLDER NAME WILL BE "propertyImages"
+        folder: "Property__Images",
+        // width: 1920,
+        crop: "scale",
+      });
+
+      //PUSHING TO THE IMAGESBUFFER VARIABLE TO GET ONE SETTED IMAGE URL TO SAVE IT
+      imagesBuffer.push({
         public_id: result.public_id,
-        url: result.url,
-      },
-      //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..." FOR NOW IT'S SOME OF IT
-      ownerID,
-      HomeSecurity,
-      ACRooms,
-      HightSpeedWifi,
-      descriptionProp,
-    });
-    res.status(200).json({ MESSAGE: "created your property " });
+        url: result.secure_url,
+      });
+    }
+    req.body.images = imagesBuffer;
+
+    const posted = await propModel.create(req.body);
+    res.status(200).json({ sucess: true, posted });
   } catch (e) {
     res.status(400).json({ ERROR: "ERROR FROM CREATE HOUSE " });
     console.log(e);
   }
+
+  // propertyType,
+  // bedrooms,
+  // price,
+  // squareFT,
+  // bathroom,
+  // yearBuilt,
+  // status,
+  // location,
+  // refrenceNo,
+  // contract,
+  // image: {
+  //   public_id: result.public_id,
+  //   url: result.url,
+  // },
+  // //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..." FOR NOW IT'S SOME OF IT
+  // ownerID,
+  // HomeSecurity,
+  // ACRooms,
+  // HightSpeedWifi,
+  // descriptionProp,
 };
 
 const updateHouse = async (req, res) => {

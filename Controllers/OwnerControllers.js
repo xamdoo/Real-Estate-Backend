@@ -1,4 +1,5 @@
 const ownerModel = require("../Models/OwnerModel");
+const cloudinary = require("../Utilis/cloudinary");
 
 const ownerList = async (req, res) => {
   try {
@@ -21,12 +22,31 @@ const postOwner = async (req, res) => {
   const { firstName, lastName, phone, email, password, schedule, image } =
     req.body;
 
-  if ((!firstName, !lastName, !phone, !email, !password, !schedule, !image)) {
+  if ((!firstName, !lastName, !phone, !email, !password, !image)) {
     return res.status(400).json({ ERROR: "fill the required fields " });
   }
+
   try {
-    await ownerModel.create(req.body);
-    res.status(200).json({ MESSAGE: "registred !!!" });
+    const result = await cloudinary.uploader.upload(image, {
+      folder: "ownerImages",
+      // width: 400,
+      crop: "scale",
+    });
+
+    saveOwner = {
+      firstName,
+      lastName,
+      phone,
+      email,
+      password,
+      image: {
+        public_id: result.public_id,
+        url: result.secure_url,
+      },
+    };
+
+    const ownerPosted = await ownerModel.create(saveOwner);
+    res.status(200).json({ MESSAGE: "registred !!!", ownerPosted });
   } catch {
     res.status(400).json({ ERROR: "from create Owner " });
   }
@@ -43,8 +63,6 @@ const editOwner = async (req, res) => {
     phone: req.body.phone || ownerInfo.phone,
     email: req.body.email || ownerInfo.email,
     password: req.body.password || ownerInfo.password,
-    schedule: req.body.schedule || ownerInfo.schedule,
-    image: req.body.image || ownerInfo.image,
   };
 
   try {

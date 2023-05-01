@@ -58,7 +58,7 @@ const propertySchema = mongoose.Schema(
     //
     descriptionProp: {
       type: String,
-      minLength: 20,
+      // minLength: 20,
       trim: true,
     },
     //
@@ -84,64 +84,59 @@ const propertySchema = mongoose.Schema(
     //AMENITIES
     FullyFurnished: {
       type: Boolean,
-
       default: false,
     },
     QueitSaroudings: {
       type: Boolean,
-
       default: false,
     },
     BathHub: {
       type: Boolean,
-
       default: false,
     },
     NoSmookingRooms: {
       type: Boolean,
-
       default: false,
     },
 
     FireExtinguish: {
       type: Boolean,
-
       default: false,
     },
 
     HomeSecurity: {
       type: Boolean,
-
       default: false,
     },
 
     ACRooms: {
       type: Boolean,
-
       default: false,
     },
 
     HightSpeedWifi: {
       type: Boolean,
-
       default: false,
     },
 
     Oven: {
       type: Boolean,
-
       default: false,
     },
-    image: {
-      public_id: {
-        type: String,
-        required: true,
+    images: [
+      {
+        public_id: {
+          type: String,
+          required: true,
+          max: 4,
+        },
+        url: {
+          type: String,
+          required: true,
+          max: 4,
+        },
       },
-      url: {
-        type: String,
-        required: true,
-      },
-    },
+    ],
   },
   {
     timestamps: true,
