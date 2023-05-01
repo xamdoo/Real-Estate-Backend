@@ -30,6 +30,6 @@ const getMessages = async (req, res) => {
 };
 
 module.exports = {
-  addMessage,
-  getMessages,
+    addMessage,
+    getMessages,
 };
