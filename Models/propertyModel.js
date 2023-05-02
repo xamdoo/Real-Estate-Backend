@@ -76,9 +76,9 @@ const propertySchema = mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    ownerID: {
+    userID: {
       type: mongoose.Types.ObjectId,
-      ref: "ownerModel",
+      ref: "User",
     },
 
     //AMENITIES

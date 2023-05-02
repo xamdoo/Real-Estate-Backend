@@ -17,23 +17,25 @@ const ownerSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-      password: {
+    password: {
+      type: String,
+      required: true,
+    },
+    schedule: [
+      {
+        type: String,
+      },
+    ],
+    image: {
+      public_id: {
         type: String,
         required: true,
       },
-      schedule: {
+      url: {
         type: String,
+        required: true,
       },
-      image: {
-        public_id: {
-          type: String,
-          required: true,
-        },
-        url: {
-          type: String,
-          required: true,
-        },
-      },
+    },
   },
   {
     timestamps: true,

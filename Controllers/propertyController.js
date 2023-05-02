@@ -47,7 +47,7 @@ const oneHouse = async (req, res) => {
   const houseID = req.params.id;
 
   try {
-    const oneProp = await propModel.findById(houseID).populate("ownerID");
+    const oneProp = await propModel.findById(houseID).populate("userID");
 
     res.status(200).json({ MESSAGE: " here is your house", oneProp });
   } catch {
@@ -118,9 +118,32 @@ const postHouse = async (req, res) => {
         url: result.secure_url,
       });
     }
-    req.body.images = imagesBuffer;
+    // req.body.images = imagesBuffer;
 
-    const posted = await propModel.create(req.body);
+    const valueToCreate = {
+      propertyType,
+      bedrooms,
+      price,
+      squareFT,
+      bathroom,
+      yearBuilt,
+      status,
+      location,
+      refrenceNo,
+      contract,
+      images: imagesBuffer,
+      //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..."
+      userID: req.user.id,
+      HomeSecurity,
+      ACRooms,
+      HightSpeedWifi,
+      /////
+      descriptionProp,
+    };
+
+    console.log(valueToCreate);
+
+    const posted = await propModel.create(valueToCreate);
     res.status(200).json({ sucess: true, posted });
   } catch (e) {
     res.status(400).json({ ERROR: "ERROR FROM CREATE HOUSE " });
