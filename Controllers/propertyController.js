@@ -1,7 +1,5 @@
 const propModel = require("../Models/propertyModel");
 const cloudinary = require("../Utilis/cloudinary");
-// const multiPart = require("connect-multiparty");
-// const multiPartMiddleWare = multiPart();
 
 const houseList = async (req, res) => {
   //VALUES HOLDERS
@@ -10,7 +8,7 @@ const houseList = async (req, res) => {
 
   try {
     //GETING ALL THE DATA FROM THE DATABASE
-    const houseList = await propModel.find();
+    const houseList = await propModel.find().sort({ createdAt: -1 });
     //THEN MAPPING AND FILTERING THE VALUES THAT GOT FROM THE DATABASE
     houseList
       .map((types) => types)
@@ -74,37 +72,6 @@ const findSearchedProperties = async (req, res) => {
     res.status(200).json({ searchList, simirlarProperties });
   } catch (e) {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF SEARCH HOUSES " });
-    console.log(e);
-  }
-};
-
-const rentHouses = async (req, res) => {
-  try {
-    const houseList = await propModel.find().sort({ createdAt: -1 });
-    const rentHouses = houseList.filter((found, index) => {
-      if (found.contract === "rent") {
-        return found;
-      }
-    });
-
-    res.status(200).json({ MESSAGE: "the rent houses", rentHouses });
-  } catch {
-    res.status(400).json({ ERROR: "from rent " });
-  }
-};
-
-const saleHouses = async (req, res) => {
-  try {
-    const houseList = await propModel.find().sort({ createdAt: -1 });
-    const saleHouses = houseList.filter((found, index) => {
-      if (found.contract === "sale") {
-        return found;
-      }
-    });
-
-    res.status(200).json({ MESSAGE: "the sale houses", saleHouses });
-  } catch (e) {
-    res.status(400).json({ ERROR: "from sale " });
     console.log(e);
   }
 };
@@ -302,7 +269,5 @@ module.exports = {
   postHouse,
   updateHouse,
   deleteHouse,
-  rentHouses,
-  saleHouses,
   findSearchedProperties,
 };
