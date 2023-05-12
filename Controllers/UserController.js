@@ -20,6 +20,7 @@ const registerUser = async (req, res) => {
     const capitalizedStr = str.map((str) => {
       return str.trim().charAt(0).toUpperCase() + str.slice(1);
     });
+
     const capitalizeFirstLetter = capitalizedStr.join(" ");
 
     //validate input data

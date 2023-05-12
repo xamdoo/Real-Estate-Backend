@@ -58,7 +58,6 @@ const propertySchema = mongoose.Schema(
     //
     descriptionProp: {
       type: String,
-      // minLength: 20,
       trim: true,
     },
     //
@@ -68,7 +67,8 @@ const propertySchema = mongoose.Schema(
     },
 
     garage: {
-      type: Number,
+      type: Boolean,
+      default: false,
     },
     contract: {
       type: String,

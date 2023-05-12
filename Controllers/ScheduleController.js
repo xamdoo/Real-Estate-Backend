@@ -16,7 +16,7 @@ const scheduleList = async (req, res) => {
 };
 
 const makeSchedule = async (req, res) => {
-  const userData = await userModel.findById(req.user.id);
+  // const userData = await userModel.findById(req.user.id);
   const propertyData = await propModel.findById(req.body.propertyId);
 
   const valueToSave = {
@@ -28,7 +28,7 @@ const makeSchedule = async (req, res) => {
 
   try {
     const scheduleMade = await ScheduleModel.create(valueToSave);
-    res.status(200).json({ Message: "you've Scheduled", scheduleMade });
+    res.status(200).json({ Message: "you've Scheduled" });
   } catch (e) {
     res.status(400).json({ ERROR: "error from  create schedule", e });
     console.log(e);
