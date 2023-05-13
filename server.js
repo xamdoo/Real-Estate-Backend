@@ -7,3 +7,4 @@ mongoose.connect(process.env.DB)
 }).catch(()=>{
     console.log("Couldn't connect to DB")
 })
+

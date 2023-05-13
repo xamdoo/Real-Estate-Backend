@@ -1,37 +1,48 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const UserSchema = mongoose.Schema({
     name: {
         type: String,
-        required: true
+        required: true,
     },
     email: {
         type: String,
-        required: true
+        required: true,
     },
     password: {
         type: String,
-        required: true
+        required: true,
     },
     confirmPassword: {
         type: String,
-        required: true
+        required: true,
     },
-    phone: {
-        type: Number,
-        required: false
+    phone: Number,
+    address: String,
+    image: {
+        public_id: {
+            type: String,
+        },
+        url: {
+            type: String,
+        },
     },
     savedProperties:  [{
         propertyId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Property',
+            ref: 'propertyModel',
             required: true
         },
     }],
+    is_agent: {
+        type: Boolean, 
+        default: false,
+        required: true
+    },
     viewedProperties:  [{
         propertyId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Property',
+            ref: 'propertyModel',
             required: true
         },
         viewedAt: {
@@ -39,9 +50,9 @@ const UserSchema = mongoose.Schema({
             default: Date.now
         }
     }],
+    
 },{
     timestamps: true
 })
 
-
-module.exports = mongoose.model('User', UserSchema)
+module.exports = mongoose.model("User", UserSchema);

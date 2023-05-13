@@ -1,32 +1,50 @@
 const express = require("express");
-const dotenv = require("dotenv");
 const cors = require("cors");
 
-
-const UserRoute = require('./Routes/UserRoute')
-const ChatRoute = require("./Routes/ChatRoute");
-const MessageRoute = require("./Routes/MessageRoute");
-const contactRoute = require("./Routes/contactRoute");
-const propertyRoute = require("./Routes/propertyRoute");
-
+const dotenv = require("dotenv");
+const port = process.env.PORT || 3000;
+const io = require("./Socket/SocketServer");
+const http = require("http");
+const { errorHandler } = require("./Middlewares/errorMiddleware");
 
 const app = express();
-app.use(express.json());
+app.use(cors());
+app.use(express.json({ limit: "3000mb", extended: true }));
+app.use(express.urlencoded({ extended: true }));
+//USING CORS TO GET ACCESS TO ANY INCOMING  HOST
 
+///ROUTES
+const UserRoute = require("./Routes/UserRoute");
+const ChatRoute = require("./Routes/ChatRoute");
+const MessageRoute = require("./Routes/MessageRoute");
+const propertyRoute = require("./Routes/propertyRoute");
+const scheduleRoute = require("./Routes/schedulesRoute");
+
+//INITIALIZING THE DONTENV FILE
 dotenv.config({ path: "./.env" });
+//requiring the DB
 require("./server");
 
-app.use(cors());
+//USING IO OR SOCKET IO
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
-app.use("/users", UserRoute)
+const server = http.createServer(app);
+io.attach(server);
+
+//USING ERROR HANDLER TO KNOW WHERE SOMETHING GOT WRONG
+app.use(errorHandler);
+
+//THE ROUTES AND ENDPOINTS
+app.use("/auth", UserRoute);
 app.use("/chat", ChatRoute);
 app.use("/message", MessageRoute);
-app.use("/info", contactRoute);
-app.use("/propertyInfo", propertyRoute);
+app.use("/propertyInfo", propertyRoute); //ME
+app.use("/schedule", scheduleRoute); // ME
 
-
-
-
-app.listen(3000, ()=>{
-    console.log("Listening on port 3000")
-})
+//LISTENING THE SERVER
+server.listen(port, () => {
+  console.log(`Listening on port ${port}`);
+});

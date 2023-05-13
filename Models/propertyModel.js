@@ -2,91 +2,141 @@ const mongoose = require("mongoose");
 
 const propertySchema = mongoose.Schema(
   {
+    //
     propertyType: {
+      required: true,
       type: String,
+      maxLength: 25,
+      trim: true,
     },
-
-    propertylocation: {
-      type: String,
-    },
-    priceFrom: {
+    //
+    bedrooms: {
+      required: true,
       type: Number,
     },
-    priceTo: {
-      type: Number,
-    },
-
-    squareFt: {
-      type: Number,
-    },
-
-    discription: {
+    //
+    squareFT: {
+      required: true,
       type: String,
+      trim: true,
+    },
+    //
+    price: {
+      required: true,
+      type: Number,
+    },
+    //
+    bathroom: {
+      required: true,
+      type: Number,
+    },
+    //
+    balcony: {
+      type: Number,
+    },
+    //
+    yearBuilt: {
+      required: true,
+      type: Number,
+    },
+    //
+    status: {
+      required: true,
+      type: String,
+      trim: true,
+    },
+    //
+    lift: {
+      type: Number,
+    },
+    //
+    location: {
+      required: true,
+      type: String,
+      trim: true,
+    },
+    //
+    descriptionProp: {
+      type: String,
+      trim: true,
+    },
+    //
+    refrenceNo: {
+      required: true,
+      type: Number,
     },
 
-    feature: [
+    garage: {
+      type: Boolean,
+      default: false,
+    },
+    contract: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    userID: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+    },
+
+    //AMENITIES
+    FullyFurnished: {
+      type: Boolean,
+      default: false,
+    },
+    QueitSaroudings: {
+      type: Boolean,
+      default: false,
+    },
+    BathHub: {
+      type: Boolean,
+      default: false,
+    },
+    NoSmookingRooms: {
+      type: Boolean,
+      default: false,
+    },
+
+    FireExtinguish: {
+      type: Boolean,
+      default: false,
+    },
+
+    HomeSecurity: {
+      type: Boolean,
+      default: false,
+    },
+
+    ACRooms: {
+      type: Boolean,
+      default: false,
+    },
+
+    HightSpeedWifi: {
+      type: Boolean,
+      default: false,
+    },
+
+    Oven: {
+      type: Boolean,
+      default: false,
+    },
+    images: [
       {
-        balcony: {
-          type: Number,
-        },
-        yearBuilt: {
-          type: Number,
-        },
-        status: {
-          type: String,
-        },
-        contract: {
-          type: String,
-        },
-        type: {
-          type: String,
-        },
-        homeArea: {
-          type: Number,
-        },
-        rooms: {
-          type: Number,
-        },
-        bedrooms: {
-          type: Number,
-        },
-        baths: {
-          type: Number,
-        },
-        garages: {
-          type: Number,
-        },
-        beds: {
-          type: Number,
-        },
-        material: {
-          type: String,
-        },
-        sold: {
-          type: String,
-        },
-        reference: {
-          type: Number,
-        },
-        contactName: {
+        public_id: {
           type: String,
           required: true,
+          max: 4,
         },
-        price: {
-          type: Number,
+        url: {
+          type: String,
           required: true,
+          max: 4,
         },
       },
     ],
-
-    image: {
-      type: String,
-      required: true,
-    },
-    owner: {
-      type: mongoose.Types.ObjectId,
-      ref: "owner",
-    },
   },
   {
     timestamps: true,
