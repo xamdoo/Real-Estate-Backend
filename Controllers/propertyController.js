@@ -57,6 +57,7 @@ const findSearchedProperties = async (req, res) => {
   //RE-ASSIGNING THE VARIABLE
   options = optCapitalFirstLetter;
   location = locationCapitalFirstLetter;
+  contract = contract ? contract : "rent";
 
   try {
     const searchList = await propModel.find({
@@ -64,11 +65,9 @@ const findSearchedProperties = async (req, res) => {
       location: location, //PROP LOCATION
       contract: contract, ///TYPE OF CONTRACT RENT OR SALE
     });
-
     //FIDNING ANY SIMILAR TO THAT TYPE OF RENT OR SALE FROMT THE USER
     const simirlarProperties = await propModel.find({ contract: contract }); //IF IT SALE IT SHOULD RECOMEND THE USER ALL SALE HOUSES
-
-    //SENDING THE DATA TO THE FRONT-END
+    // SENDING THE DATA TO THE FRONT-END
     res.status(200).json({ searchList, simirlarProperties });
   } catch (e) {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF SEARCH HOUSES " });
