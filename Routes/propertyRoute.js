@@ -8,6 +8,8 @@ const UserController = require("../Controllers/UserController");
 router.route("/houseList").get(propertyController.houseList);
 router.route("/search").get(propertyController.findSearchedProperties);
 router.route("/oneHouse/:id").get(propertyController.oneHouse);
+router.route('/properties').get(propertyController.getMultipleProperties)
+router.route('/listings').get(UserController.protect, propertyController.getAgentListings)
 
 router
   .route("/postHouse")

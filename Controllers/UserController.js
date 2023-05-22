@@ -104,7 +104,6 @@ const loginUser = async (req, res) => {
                 agent: findUser.is_agent,
                 address: findUser.address,
                 image: findUser.image,
-                viewedProperties: findUser.viewedProperties,
                 token
             })
     }catch{
@@ -222,9 +221,9 @@ const savedProperties = async(req, res)=>{
 
 //@desc Update user's Viewed Properties
 const viewedProperties = async(req, res)=>{
-
+    
     try{
-        
+        console.log(req.body)
         const { userId, propertyId } = req.body
 
         if (!userId || !propertyId) {
@@ -238,43 +237,37 @@ const viewedProperties = async(req, res)=>{
         return res.status(404).json({ message: 'User not found' })
         }
 
-        const viewedPropertyExists = user.viewedProperties.some((viewedProperty )=> {
-            if (viewedProperty && viewedProperty.propertyId) {
-                return viewedProperty.propertyId.toString() === propertyId;
-            }
-            return false;
-        });
-
         //Check if the Property Id is present and it doesn't already exist
-        if (!viewedPropertyExists) {
-            const updatedUser = await User.findByIdAndUpdate(
-                userId, {
-                    //add the viewedProperty to the array unless the value is already present
-                    $addToSet:{
-                        viewedProperties:{
-                            propertyId,
-                            viewedAt,
-                        }
-                    }
-                },
-                { new: true}
-            ).populate({
-                path: 'viewedProperties.propertyId',
-                model: 'propertyModel',
-            }).exec();
-            
-            
-            if(!updatedUser.viewedProperties || updatedUser.viewedProperties.length === 0){
-                res.status(400).json({ message: "No viewed properties found"})
-            }
-
-            res.status(200).json({ viewedProperties: updatedUser.viewedProperties })
-            console.log(updatedUser)
-        } else {
+        const viewedProperty = user.viewedProperties.find(
+            (viewedProp) => viewedProp.propertyId.toString() === propertyId
+        );
+    
+        if (viewedProperty) {
             return res.status(400).json({ message: 'Property already viewed' });
         }
-
         
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId, {
+                //add the viewedProperty to the array unless the value is already present
+                $addToSet:{
+                    viewedProperties:{
+                        propertyId,
+                        viewedAt,
+                    }
+                }
+            },
+            { new: true}
+        ).populate({
+            path: 'viewedProperties.propertyId',
+        }).exec();
+            
+        
+        if(!updatedUser.viewedProperties || updatedUser.viewedProperties.length === 0){
+            res.status(400).json({ message: "No viewed properties found"})
+        }
+
+        res.status(200).json({ viewedProperties: updatedUser.viewedProperties })
     }catch(e){
         console.log(e.message)
         return res.status(500).json({ message:'Error updating viewed properties' })

@@ -81,11 +81,9 @@ const oneHouse = async (req, res) => {
 
   try {
     const oneProp = await propModel.findById(houseID).populate("userID");
-    const recomendHouses = await propModel.find({ userID: oneProp.userID });
-
     res
       .status(200)
-      .json({ MESSAGE: " here is your house", oneProp, recomendHouses });
+      .json({ oneProp });
   } catch {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF HOUSE (one) " });
   }
@@ -263,6 +261,37 @@ const deleteHouse = async (req, res) => {
   }
 };
 
+
+const getMultipleProperties = async(req, res)=>{
+  const { propertyIds } = req.query;
+  try {
+    const props = await propModel.find({ _id: { $in: propertyIds } });
+    res.status(200).json(props)
+  }catch(e){
+    console.log(e)
+    res.status(500).json({message: 'Server Error'})
+  }
+}
+
+// Retrieving Agent Listings 
+const getAgentListings = async (req, res) => {
+  try{
+    const { id } = req.user
+    
+    // Find all properties associated with the logged-in agent
+    const properties = await propModel.find({ userId: id });
+
+    if(!properties){
+      res.status(400).json({message: 'No property'})
+    }
+    res.status(200).json(properties);
+  }catch(e){
+    console.log(e)
+    res.status(500).json({message: 'Server Error'})
+  }
+};
+
+
 module.exports = {
   houseList,
   oneHouse,
@@ -270,4 +299,6 @@ module.exports = {
   updateHouse,
   deleteHouse,
   findSearchedProperties,
+  getMultipleProperties,
+  getAgentListings,
 };
