@@ -60,13 +60,17 @@ const findSearchedProperties = async (req, res) => {
   contract = contract ? contract : "rent";
 
   try {
-    const searchList = await propModel.find({
-      propertyType: options, //PROP TYPE
-      location: location, //PROP LOCATION
-      contract: contract, ///TYPE OF CONTRACT RENT OR SALE
-    });
+    const searchList = await propModel
+      .find({
+        propertyType: options, //PROP TYPE
+        location: location, //PROP LOCATION
+        contract: contract, ///TYPE OF CONTRACT RENT OR SALE
+      })
+      .populate("userID");
     //FIDNING ANY SIMILAR TO THAT TYPE OF RENT OR SALE FROMT THE USER
-    const simirlarProperties = await propModel.find({ contract: contract }); //IF IT SALE IT SHOULD RECOMEND THE USER ALL SALE HOUSES
+    const simirlarProperties = await propModel
+      .find({ contract: contract })
+      .populate("userID"); //IF IT SALE IT SHOULD RECOMEND THE USER ALL SALE HOUSES
     // SENDING THE DATA TO THE FRONT-END
     res.status(200).json({ searchList, simirlarProperties });
   } catch (e) {
@@ -93,27 +97,33 @@ const oneHouse = async (req, res) => {
 //GET ALL
 
 const postHouse = async (req, res) => {
+  //
   const {
-    propertyType,
     bedrooms,
-    price,
-    squareFT,
     bathroom,
     yearBuilt,
-    status,
-    location,
-    refrenceNo,
+    addFavorite,
+    squareFT,
+    price,
+    propertyType,
+    city,
+    country,
+    contractTime,
+    discount,
+    propertyNo,
+    zipCode,
     contract,
-    images,
-    //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..."
-
-    HomeSecurity,
+    garage,
+    balcony,
+    fullyFurnished,
+    quiteSaroundings,
+    homeSecurity,
     ACRooms,
-    HightSpeedWifi,
-    /////
-    descriptionProp,
-  } = req.body;
+    oven,
+    bathHub,
+  } = req.body.values;
 
+  //validating if is empty these fields
   if (
     !propertyType ||
     !bedrooms ||
@@ -121,10 +131,9 @@ const postHouse = async (req, res) => {
     !squareFT ||
     !bathroom ||
     !yearBuilt ||
-    !status ||
-    !location ||
-    !refrenceNo ||
-    !contract
+    !country ||
+    !city ||
+    !propertyNo
   ) {
     return res.status(400).json({ ERROR: "please fill the required fields" });
   }
@@ -144,45 +153,44 @@ const postHouse = async (req, res) => {
 
   const capitalizeFirstLetter = capitalizedStr.join(" ");
 
-  //LOCATION CAPITALIZATION
-  const locat = location.split(" ");
+  // //LOCATION CAPITALIZATION
+  const cityCapilization = city.split(" ");
   //
-  const locationCapital = locat.map((lo) => {
-    return lo.trim().charAt(0).toUpperCase() + lo.slice(1);
+  const cityCapital = cityCapilization.map((city) => {
+    return city.trim().charAt(0).toUpperCase() + city.slice(1);
   });
 
-  const locationCapitalFirstLetter = locationCapital.join(" ");
+  const cityCapitalized = cityCapital.join(" ");
 
-  //STATUS CAPITALIZATION
-  const stat = status.split(" ");
+  // // //COUNTRY CAPITALIZATION
+  const countryCapitalization = country.split(" ");
   //
-  const statCapital = stat.map((st) => {
-    return st.trim().charAt(0).toUpperCase() + st.slice(1);
+  const counCapital = countryCapitalization.map((cn) => {
+    return cn.trim().charAt(0).toUpperCase() + cn.slice(1);
   });
 
-  const statusCapitalized = statCapital.join(" ");
+  const countryCapitalized = counCapital.join(" ");
 
   try {
-    let images = [...req.body.images];
+    let newImages = req.body.images;
     let imagesBuffer = [];
-
-    // //LOOPING TO ADD THE ABOVE VARIBALE EVERY IMAGE OF THAT PROPERTY IMAGES TO SAVE ONE TIME
-    for (let i = 0; i < images.length; i++) {
+    //   // //LOOPING TO ADD THE ABOVE VARIBALE EVERY IMAGE OF THAT PROPERTY IMAGES TO SAVE ONE TIME
+    for (let i = 0; i < newImages.length; i++) {
       //UPLOADING THE IMAGES TO CLOUDINARY
-      const result = await cloudinary.uploader.upload(images[i], {
+      const result = await cloudinary.uploader.upload(newImages[i], {
         //FOLDER NAME WILL BE "propertyImages"
-        folder: "Property__Images",
+        folder: "propertyImages",
         // width: 1920,
         crop: "scale",
       });
-
       //PUSHING TO THE IMAGESBUFFER VARIABLE TO GET ONE SETTED IMAGE URL TO SAVE IT
       imagesBuffer.push({
         public_id: result.public_id,
-        url: result.secure_url,
+        url: result.url,
       });
     }
-    // req.body.images = imagesBuffer;
+
+    req.body.images = imagesBuffer;
 
     const valueToCreate = {
       propertyType: capitalizeFirstLetter,
@@ -191,22 +199,28 @@ const postHouse = async (req, res) => {
       squareFT,
       bathroom,
       yearBuilt,
-      status: statusCapitalized,
-      location: locationCapitalFirstLetter,
-      refrenceNo,
+      zipCode,
+      country: countryCapitalized,
+      city: cityCapitalized,
+      propertyNo,
       contract,
       images: imagesBuffer,
+      contractTime,
+      discount,
       //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..."
       userID: req.user.id,
-      HomeSecurity,
+      homeSecurity,
       ACRooms,
-      HightSpeedWifi,
-      /////
-      descriptionProp,
+      fullyFurnished,
+      quiteSaroundings,
+      oven,
+      bathHub,
+      garage,
+      balcony,
     };
-
+    //SAVING THE DATA
     const posted = await propModel.create(valueToCreate);
-    res.status(200).json({ sucess: true, posted });
+    res.status(200).json({ MESSAGE: "Submited Successfully", posted });
   } catch (e) {
     res.status(400).json({ ERROR: "ERROR FROM CREATE HOUSE " });
     console.log(e);

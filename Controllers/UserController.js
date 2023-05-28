@@ -129,9 +129,9 @@ const editProfile = async (req, res) => {
         .join(" ");
     };
 
-    user.name = capitalizeFirstLetter(name);
-    user.address = capitalizeFirstLetter(address);
-    user.phone = phone;
+    user.name = name ? capitalizeFirstLetter(name) : user.name;
+    user.address = address ? capitalizeFirstLetter(address) : "";
+    user.phone = phone ? phone : user.phone;
 
     const result = await cloudinary.uploader.upload(
       `data:image/jpeg;base64,${req.body.image}`,

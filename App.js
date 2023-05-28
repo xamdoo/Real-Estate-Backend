@@ -6,7 +6,6 @@ const port = process.env.PORT || 3000;
 const io = require("./Socket/SocketServer");
 const http = require("http");
 const { errorHandler } = require("./Middlewares/errorMiddleware");
-
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "3000mb", extended: true }));
