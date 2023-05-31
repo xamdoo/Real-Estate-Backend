@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const UserSchema = mongoose.Schema({
     name: {
         type: String,
-        required: true,
     },
     email: {
         type: String,
@@ -31,7 +30,6 @@ const UserSchema = mongoose.Schema({
         propertyId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'propertyModel',
-            required: true
         },
     }],
     is_agent: {

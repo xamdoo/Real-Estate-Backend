@@ -7,7 +7,7 @@ const io = socketIO({
     }
 });
 
-let activeUsers = []
+let activeUsers = [];
 
 io.on('connection', (socket)=>{
 
@@ -30,20 +30,27 @@ io.on('connection', (socket)=>{
     socket.on('sendMessage', (message)=>{
         
         const user = activeUsers.find((user)=> user.userId === message.recipientId);
+        
 
-        if(user){
-            io.to(user.socketId).emit("receiveMessage", message);
-            io.to(user.socketId).emit("getNotification", {
+        if (user && message && message.text && message.text.trim() !== '') { 
+            io.to(user.socketId).emit('receiveMessage', message);
+            //console.log('Message sent to recipient:', user.userId);
+        
+            io.to(user.socketId).emit('getNotification', {
                 senderId: message.senderId,
                 isRead: false,
                 date: new Date()
-            })
+            });
+            
+        } else {
+            console.log('Invalid message or recipient not found.');
         }
+
     })
 
     socket.on("disconnect", ()=>{
         activeUsers = activeUsers.filter((user)=> user.socketId !== socket.id)
-        //console.log("User Disconnected", activeUsers)
+        
         io.emit('getOnlineUsers', activeUsers)
     })
 });

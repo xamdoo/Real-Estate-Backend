@@ -7,7 +7,7 @@ const cloudinary = require("../Utilis/cloudinary");
 
 
 
-
+//Function to create JWT token
 const createToken = (_id)=>{
     const jwtkey = process.env.JWT_SECRET;
     
@@ -30,9 +30,9 @@ const registerUser = async(req,res)=>{
             return res.status(400).json({message: 'Please add all fields'})
         }
 
-    if (!validator.isEmail(email)) {
-        return res.status(400).json({ message: "Invalid email address" });
-    }
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({ message: "Invalid email address" });
+        }
 
         if(password.length < 6){
             return res.status(400).json({ message: "Password must be at least 6 characters" })
@@ -44,9 +44,9 @@ const registerUser = async(req,res)=>{
             return res.status(400).json({ message: "User already exists" })
         }
 
-    //encrypt password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+        //encrypt password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
         //create user
         await User.create({
@@ -203,27 +203,7 @@ const changePassword = async(req,res)=>{
 //@desc retrieving user's Saved Properties
 const savedProperties = async(req, res)=>{
     try{
-        const { id } = req.params
-        const user = await User.findById(id).populate('savedProperties.propertyId')
-        if(!user){
-            res.status(400).json({ message: "User not found"})
-        }
-        const savedProperties = user.savedProperties
-        if(!savedProperties || savedProperties.length === 0){
-            res.status(400).json({ message: "No saved properties found"})
-        }
-        res.status(200).json({ savedProperties })
-    }catch{
-        return res.status(500).json({ message:'Error retrieving saved properties' })
-    }
-}
-
-
-//@desc Update user's Viewed Properties
-const viewedProperties = async(req, res)=>{
-    
-    try{
-        console.log(req.body)
+        
         const { userId, propertyId } = req.body
 
         if (!userId || !propertyId) {
@@ -234,7 +214,62 @@ const viewedProperties = async(req, res)=>{
         const user = await User.findById(userId)
 
         if (!user) {
-        return res.status(404).json({ message: 'User not found' })
+            return res.status(404).json({ message: 'User not found' })
+        }
+
+        //Check if the Property Id is present and it doesn't already exist
+        const savedProperty = user.savedProperties.find(
+            (savedProp) => savedProp.propertyId.toString() === propertyId
+        );
+    
+        if (savedProperty) {
+            return res.status(400).json({ message: 'Already saved' });
+        }
+        
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId, {
+                //add the savedProperty to the array unless the value is already present
+                $addToSet:{
+                    savedProperties:{
+                        propertyId,
+                        viewedAt,
+                    }
+                }
+            },
+            { new: true}
+        ).populate({
+            path: 'savedProperties.propertyId',
+        }).exec();
+            
+        
+        if(!updatedUser.savedProperties || updatedUser.savedProperties.length === 0){
+            res.status(400).json({ message: "No Saved properties found"})
+        }
+
+        res.status(200).json({ savedProperties: updatedUser.savedProperties })
+    }catch{
+        return res.status(500).json({ message:'Error retrieving saved properties' })
+    }
+}
+
+
+//@desc Update user's Viewed Properties
+const viewedProperties = async(req, res)=>{
+    
+    try{
+        
+        const { userId, propertyId } = req.body
+
+        if (!userId || !propertyId) {
+            return res.status(400).json({ message: 'Invalid request' });
+        }
+        
+        const viewedAt = Date.now()
+        const user = await User.findById(userId)
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' })
         }
 
         //Check if the Property Id is present and it doesn't already exist
@@ -274,36 +309,46 @@ const viewedProperties = async(req, res)=>{
     }
 }
 
-//@desc Delete User's Viewed Properties 
-const deleteViewedProperty = async (req, res) =>{
-    try{
-        //extract the userId and propertyId from the request body
-        const { userId, propertyId } = req.body
+//@desc Clear User's Viewed Properties
+const clearViewedProperties = async (req, res) => {
+    
+    try {
+        const { userId } = req.body;
 
-        //Find the user with the given userId
-        const user = await User.findById(userId)
+        const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: 'User not found' })
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        //Check if the user has the viewed property with the given propertyId
-        const viewedPropertyIndex = user.viewedProperties.findIndex(
-            viewedProperty => viewedProperty.propertyId.toString() === propertyId
-        )
-        if (viewedPropertyIndex === -1) {
-            return res.status(404).json({ message: 'Property not found' })
-        }
+        user.viewedProperties = []; // Clear the viewed properties array
+        const updatedUser = await user.save();
 
-        //Remove the viewed property with the given propertyId
-        user.viewedProperties.splice(viewedPropertyIndex, 1)
-        const updatedUser = await user.save()
-
-        res.status(200).json({ message: 'Successfully deleted'})
-        
-    }catch(e){
-        return res.status(500).json({ message:'Error deleting the item' })
+        res.status(200).json({ message: 'Successfully cleared searches', user: updatedUser });
+    } catch (e) {
+        return res.status(500).json({ message: 'Error clearing viewed properties' });
     }
-}; 
+};
+
+//@desc Clear User's Saved Properties
+const clearSavedProperties = async (req, res) => {
+    
+    try {
+        const { userId } = req.body;
+        
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Clear the saved properties array
+        user.savedProperties = []; 
+        const updatedUser = await user.save();
+
+        res.status(200).json({ message: 'Successfully cleared favorites', user: updatedUser });
+    } catch (e) {
+        return res.status(500).json({ message: 'Error clearing favorite properties' });
+    }
+};
 
 
 //@desc Protect Middleware to Authenticate user
@@ -364,7 +409,8 @@ module.exports = {
     protect,
     getUsers,
     findUser,
-    deleteViewedProperty,
+    clearViewedProperties,
+    clearSavedProperties,
     changePassword,
     editProfile
 
