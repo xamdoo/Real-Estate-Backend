@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const propertySchema = mongoose.Schema(
   {
+    userID: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+    },
     //
     propertyType: {
       required: true,
@@ -17,7 +21,7 @@ const propertySchema = mongoose.Schema(
     //
     squareFT: {
       required: true,
-      type: String,
+      type: Number,
       trim: true,
     },
     //
@@ -32,116 +36,116 @@ const propertySchema = mongoose.Schema(
     },
     //
     balcony: {
-      type: Number,
+      type: Boolean,
+      default: false,
     },
     //
     yearBuilt: {
       required: true,
       type: Number,
     },
+
     //
-    status: {
-      required: true,
+
+    country: {
       type: String,
-      trim: true,
-    },
-    //
-    lift: {
-      type: Number,
-    },
-    //
-    location: {
       required: true,
+    },
+
+    city: {
       type: String,
-      trim: true,
+      required: true,
     },
     //
     descriptionProp: {
       type: String,
-      minLength: 20,
       trim: true,
+      default: "waa guri kiro ah oo banaan",
     },
     //
-    refrenceNo: {
+    propertyNo: {
       required: true,
       type: Number,
     },
 
     garage: {
-      type: Number,
+      type: Boolean,
+      default: false,
     },
     contract: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
+      default: "rent",
     },
-    ownerID: {
-      type: mongoose.Types.ObjectId,
-      ref: "ownerModel",
+
+    zipCode: {
+      type: Number,
     },
 
     //AMENITIES
-    FullyFurnished: {
+    fullyFurnished: {
       type: Boolean,
-
       default: false,
     },
-    QueitSaroudings: {
+    quiteSaroundings: {
       type: Boolean,
-
       default: false,
     },
-    BathHub: {
+    bathHub: {
       type: Boolean,
-
       default: false,
     },
-    NoSmookingRooms: {
+    noSmookingRooms: {
       type: Boolean,
-
       default: false,
     },
 
-    FireExtinguish: {
+    fireExtinguish: {
       type: Boolean,
-
       default: false,
     },
 
-    HomeSecurity: {
+    homeSecurity: {
       type: Boolean,
-
       default: false,
     },
 
     ACRooms: {
       type: Boolean,
-
       default: false,
     },
 
-    HightSpeedWifi: {
+    countractTime: {
+      type: Number,
+      default: 1,
+    },
+    discount: {
+      type: Number,
+      default: 0,
+    },
+    highSpeedWifi: {
       type: Boolean,
-
       default: false,
     },
 
-    Oven: {
+    oven: {
       type: Boolean,
-
       default: false,
     },
-    image: {
-      public_id: {
-        type: String,
-        required: true,
+    images: [
+      {
+        public_id: {
+          type: String,
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
       },
-      url: {
-        type: String,
-        required: true,
-      },
-    },
+    ],
   },
   {
     timestamps: true,
