@@ -5,6 +5,12 @@ const ChatSchema = mongoose.Schema(
     members: {
       type: Array,
     },
+    messages: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message",
+      },
+    ],
   },
   {
     timestamps: true,

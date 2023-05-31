@@ -1,16 +1,29 @@
 const Chat = require("../Models/ChatModel");
+const Message = require("../Models/MessageModel")
 
 //@desc Creating a new chat from getting instance from chatModel
 const createChat = async(req, res)=>{
     const {senderId, receiverId} = req.body
 
+    if (!senderId || !receiverId) {
+        return res.status(400).json({ message: "Sender ID and receiver ID are required." });
+    }
+
     try {
         //check if a chat already exists 
-        const chat = await Chat.findOne({
+        const existingChat = await Chat.findOne({
             members: {$all: [senderId, receiverId]}
         });
 
-        if(chat) return res.status(200).json(chat)
+
+        if (existingChat) {
+            return res.status(200).json(existingChat)
+        }
+
+        //If members array is empty, do not save the data
+        if (senderId === receiverId) {
+            return res.status(400).json({ error: "Sender ID and receiver ID cannot be the same." });
+        }
 
         //if chat doesn't exist, create one
         const newChat = new Chat({
@@ -24,13 +37,13 @@ const createChat = async(req, res)=>{
     }
 };
 
-//@desc Find all chats that involve the user with the ID specified
+//@desc Retrieve all chats for a specific user 
 const userChats = async(req, res)=>{
     const userId = req.params.userId
     try{
         const chat = await Chat.find({
             members: {$in:[userId]} // The $in operator selects the documents where the value of a field equals any value in the specified array.
-        })
+        }).populate('messages', 'text createdAt');
         
         res.status(200).json(chat)
     }catch(error){
@@ -38,7 +51,7 @@ const userChats = async(req, res)=>{
     }
 }
 
-//@desc Find a chat between two members, identified by their firstId and secondId parameters.
+//@desc Retrieve a chat between two members, identified by their firstId and secondId parameters.
 const findChat = async(req, res)=>{
     const {firstId, secondId} = req.params
     try{
@@ -50,6 +63,7 @@ const findChat = async(req, res)=>{
         res.status(500).json(error)
     }
 }
+
 
 module.exports = {
     createChat,

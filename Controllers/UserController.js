@@ -5,6 +5,7 @@ const { Error } = require("mongoose");
 const validator = require("validator");
 const cloudinary = require("../Utilis/cloudinary");
 
+//Function to create JWT token
 const createToken = (_id) => {
   const jwtkey = process.env.JWT_SECRET;
 
@@ -121,28 +122,33 @@ const editProfile = async (req, res) => {
 
     // Capitalize the first letter of each word in name and address
     const capitalizeFirstLetter = (str) => {
-      const words = str.split(" ");
+      if (!str || str.trim().length === 0) {
+        return str; // return the empty string or undefined value
+      }
+      const words = str.trim().split(" ");
       return words
         .map((word) => {
-          return word.trim().charAt(0).toUpperCase() + word.slice(1);
+          return word.charAt(0).toUpperCase() + word.slice(1);
         })
         .join(" ");
     };
 
-    user.name = name ? capitalizeFirstLetter(name) : user.name;
-    user.address = address ? capitalizeFirstLetter(address) : "";
-    user.phone = phone ? phone : user.phone;
+    user.name = capitalizeFirstLetter(name);
+    user.address = capitalizeFirstLetter(address);
+    user.phone = phone;
 
-    const result = await cloudinary.uploader.upload(
-      `data:image/jpeg;base64,${req.body.image}`,
-      {
-        folder: "userProfile",
-      }
-    );
-    user.image = {
-      public_id: result.public_id,
-      url: result.url,
-    };
+    if (req.body.image) {
+      const result = await cloudinary.uploader.upload(
+        `data:image/jpeg;base64,${req.body.image}`,
+        {
+          folder: "userProfile",
+        }
+      );
+      user.image = {
+        public_id: result.public_id,
+        url: result.url,
+      };
+    }
 
     await user.save();
 
@@ -166,8 +172,9 @@ const editProfile = async (req, res) => {
 
 const changePassword = async (req, res) => {
   try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
     const { id } = req.params;
-    const { oldPassword, newPassword } = req.body;
     const user = await User.findById(id);
 
     const passwordMatch = await bcrypt.compare(oldPassword, user.password);
@@ -180,6 +187,13 @@ const changePassword = async (req, res) => {
       return res
         .status(400)
         .json({ message: "Password must be at least 6 characters" });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(401).json({ message: "the Password don't match" });
+    }
+
+    if (oldPassword === newPassword) {
+      return res.status(401).json({ message: "Please enter a new Password" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -196,16 +210,54 @@ const changePassword = async (req, res) => {
 //@desc retrieving user's Saved Properties
 const savedProperties = async (req, res) => {
   try {
-    const { id } = req.params;
-    const user = await User.findById(id).populate("savedProperties.propertyId");
+    const { userId, propertyId } = req.body;
+
+    if (!userId || !propertyId) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
+
+    const viewedAt = Date.now();
+    const user = await User.findById(userId);
+
     if (!user) {
-      res.status(400).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
-    const savedProperties = user.savedProperties;
-    if (!savedProperties || savedProperties.length === 0) {
-      res.status(400).json({ message: "No saved properties found" });
+
+    //Check if the Property Id is present and it doesn't already exist
+    const savedProperty = user.savedProperties.find(
+      (savedProp) => savedProp.propertyId.toString() === propertyId
+    );
+
+    if (savedProperty) {
+      return res.status(400).json({ message: "Already saved" });
     }
-    res.status(200).json({ savedProperties });
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        //add the savedProperty to the array unless the value is already present
+        $addToSet: {
+          savedProperties: {
+            propertyId,
+            viewedAt,
+          },
+        },
+      },
+      { new: true }
+    )
+      .populate({
+        path: "savedProperties.propertyId",
+      })
+      .exec();
+
+    if (
+      !updatedUser.savedProperties ||
+      updatedUser.savedProperties.length === 0
+    ) {
+      res.status(400).json({ message: "No Saved properties found" });
+    }
+
+    res.status(200).json({ savedProperties: updatedUser.savedProperties });
   } catch {
     return res
       .status(500)
@@ -217,6 +269,11 @@ const savedProperties = async (req, res) => {
 const viewedProperties = async (req, res) => {
   try {
     const { userId, propertyId } = req.body;
+
+    if (!userId || !propertyId) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
+
     const viewedAt = Date.now();
     const user = await User.findById(userId);
 
@@ -224,10 +281,12 @@ const viewedProperties = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const viewedPropertyExists = user.viewedProperties.some(
-      (viewedProperty) => viewedProperty.propertyId.toString() === propertyId
+    //Check if the Property Id is present and it doesn't already exist
+    const viewedProperty = user.viewedProperties.find(
+      (viewedProp) => viewedProp.propertyId.toString() === propertyId
     );
-    if (viewedPropertyExists) {
+
+    if (viewedProperty) {
       return res.status(400).json({ message: "Property already viewed" });
     }
 
@@ -243,7 +302,11 @@ const viewedProperties = async (req, res) => {
         },
       },
       { new: true }
-    ).populate("viewedProperties.propertyId");
+    )
+      .populate({
+        path: "viewedProperties.propertyId",
+      })
+      .exec();
 
     if (
       !updatedUser.viewedProperties ||
@@ -261,33 +324,50 @@ const viewedProperties = async (req, res) => {
   }
 };
 
-//@desc Delete User's Viewed Properties
-const deleteViewedProperty = async (req, res) => {
+//@desc Clear User's Viewed Properties
+const clearViewedProperties = async (req, res) => {
   try {
-    //extract the userId and propertyId from the request body
-    const { userId, propertyId } = req.body;
+    const { userId } = req.body;
 
-    //Find the user with the given userId
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    //Check if the user has the viewed property with the given propertyId
-    const viewedPropertyIndex = user.viewedProperties.findIndex(
-      (viewedProperty) => viewedProperty.propertyId.toString() === propertyId
-    );
-    if (viewedPropertyIndex === -1) {
-      return res.status(404).json({ message: "Property not found" });
-    }
-
-    //Remove the viewed property with the given propertyId
-    user.viewedProperties.splice(viewedPropertyIndex, 1);
+    user.viewedProperties = []; // Clear the viewed properties array
     const updatedUser = await user.save();
 
-    res.status(200).json({ message: "Successfully deleted" });
+    res
+      .status(200)
+      .json({ message: "Successfully cleared searches", user: updatedUser });
   } catch (e) {
-    return res.status(500).json({ message: "Error deleting the item" });
+    return res
+      .status(500)
+      .json({ message: "Error clearing viewed properties" });
+  }
+};
+
+//@desc Clear User's Saved Properties
+const clearSavedProperties = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Clear the saved properties array
+    user.savedProperties = [];
+    const updatedUser = await user.save();
+
+    res
+      .status(200)
+      .json({ message: "Successfully cleared favorites", user: updatedUser });
+  } catch (e) {
+    return res
+      .status(500)
+      .json({ message: "Error clearing favorite properties" });
   }
 };
 
@@ -348,7 +428,8 @@ module.exports = {
   protect,
   getUsers,
   findUser,
-  deleteViewedProperty,
+  clearViewedProperties,
+  clearSavedProperties,
   changePassword,
   editProfile,
 };

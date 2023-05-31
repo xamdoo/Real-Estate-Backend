@@ -71,6 +71,8 @@ const propertySchema = mongoose.Schema(
     garage: {
       type: Boolean,
       default: false,
+      type: Boolean,
+      default: false,
     },
     contract: {
       type: String,

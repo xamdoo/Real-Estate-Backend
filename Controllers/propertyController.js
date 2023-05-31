@@ -8,7 +8,22 @@ const houseList = async (req, res) => {
 
   try {
     //GETING ALL THE DATA FROM THE DATABASE
+    //GETING ALL THE DATA FROM THE DATABASE
     const houseList = await propModel.find().sort({ createdAt: -1 });
+    //THEN MAPPING AND FILTERING THE VALUES THAT GOT FROM THE DATABASE
+    houseList
+      .map((types) => types)
+      .filter((e) => {
+        if (e.contract === "rent") {
+          const updateRentHouses = [...rentHouses, e];
+
+          rentHouses = updateRentHouses;
+        } else if (e.contract === "sale") {
+          const updateSaleHouses = [...saleHouses, e];
+
+          saleHouses = updateSaleHouses;
+        }
+      });
     //THEN MAPPING AND FILTERING THE VALUES THAT GOT FROM THE DATABASE
     houseList
       .map((types) => types)
@@ -118,6 +133,8 @@ const oneHouse = async (req, res) => {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF HOUSE (one) " });
   }
 };
+
+//GET ALL
 
 //GET ALL
 
@@ -298,6 +315,35 @@ const deleteHouse = async (req, res) => {
     res.status(200).json({ MESSAGE: "successfully deleted!!" });
   } catch {
     res.status(400).json({ ERROR: "error from deleting House" });
+  }
+};
+
+const getMultipleProperties = async (req, res) => {
+  const { propertyIds } = req.query;
+  try {
+    const props = await propModel.find({ _id: { $in: propertyIds } });
+    res.status(200).json(props);
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// Retrieving Agent Listings
+const getAgentListings = async (req, res) => {
+  try {
+    const { id } = req.user;
+
+    // Find all properties associated with the logged-in agent
+    const properties = await propModel.find({ userId: id });
+
+    if (!properties) {
+      res.status(400).json({ message: "No property" });
+    }
+    res.status(200).json(properties);
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 

@@ -7,6 +7,7 @@ const UserController = require("../Controllers/UserController");
 
 router.route("/houseList").get(propertyController.houseList);
 router.route("/search").get(propertyController.findSearchedProperties);
+router.route("/search").get(propertyController.findSearchedProperties);
 router.route("/oneHouse/:id").get(propertyController.oneHouse);
 
 router

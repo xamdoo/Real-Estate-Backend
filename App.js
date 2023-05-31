@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-
 const dotenv = require("dotenv");
 const port = process.env.PORT || 3000;
 const io = require("./Socket/SocketServer");
@@ -20,11 +19,14 @@ const propertyRoute = require("./Routes/propertyRoute");
 const scheduleRoute = require("./Routes/schedulesRoute");
 
 //INITIALIZING THE DONTENV FILE
+
 dotenv.config({ path: "./.env" });
 //requiring the DB
+
 require("./server");
 
 //USING IO OR SOCKET IO
+
 app.use((req, res, next) => {
   req.io = io;
   next();
