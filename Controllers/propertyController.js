@@ -32,46 +32,71 @@ const houseList = async (req, res) => {
 };
 
 const findSearchedProperties = async (req, res) => {
-  let { options, location, contract } = req.query;
-  //
-  if (!options || !location) {
-    return res.status(401).json({ ERROR: " search somthing " });
-  }
+  let { options, country, contract } = req.query;
 
-  //LOCATION CAPITALIZATION
-  const locat = location.split(" ");
-  //
-  const locationCapital = locat.map((lo) => {
-    return lo.trim().charAt(0).toUpperCase() + lo.slice(1);
-  });
-  const locationCapitalFirstLetter = locationCapital.join("");
+  const toCapitalLetter = (str) => {
+    const CapitalStr = str.split(" ");
 
-  //OPTIONS CAPITALIZATION
-  const opt = options.split(" ");
-  //
-  const opCapital = opt.map((op) => {
-    return op.trim().charAt(0).toUpperCase() + op.slice(1);
-  });
-  const optCapitalFirstLetter = opCapital.join("");
+    return CapitalStr.map((st) => {
+      return st.trim().charAt(0).toUpperCase() + st.slice(1);
+    }).join("");
+  };
 
-  //RE-ASSIGNING THE VARIABLE
-  options = optCapitalFirstLetter;
-  location = locationCapitalFirstLetter;
-  contract = contract ? contract : "rent";
+  // //RE-ASSIGNING THE VARIABLE
+  options = options ? toCapitalLetter(options) : false;
+  country = country ? toCapitalLetter(country) : false;
 
   try {
-    const searchList = await propModel
-      .find({
-        propertyType: options, //PROP TYPE
-        location: location, //PROP LOCATION
-        contract: contract, ///TYPE OF CONTRACT RENT OR SALE
-      })
-      .populate("userID");
-    //FIDNING ANY SIMILAR TO THAT TYPE OF RENT OR SALE FROMT THE USER
-    const simirlarProperties = await propModel
-      .find({ contract: contract })
-      .populate("userID"); //IF IT SALE IT SHOULD RECOMEND THE USER ALL SALE HOUSES
-    // SENDING THE DATA TO THE FRONT-END
+    let searchList = [];
+
+    if (options && country && contract) {
+      const newSearchList = await propModel
+        .find({
+          propertyType: options, //PROP TYPE
+          country: country, //PROP country
+          contract: contract, ///TYPE OF CONTRACT RENT OR SALE
+        })
+        .populate("userID");
+
+      const updateSearchList = [...searchList, newSearchList];
+      searchList = updateSearchList;
+
+      console.log("intaba wan ku helay ", searchList);
+    } else if (country) {
+      const newSearchList = await propModel
+        .find({
+          country: country, //PROP COUNTRY
+        })
+        .populate("userID");
+
+      const updateSearchList = [...searchList, newSearchList];
+      searchList = updateSearchList;
+    } else if (contract) {
+      const newSearchList = await propModel
+        .find({
+          contract: contract, ///TYPE OF CONTRACT RENT OR SALE
+        })
+        .populate("userID");
+
+      const updateSearchList = [...searchList, newSearchList];
+      searchList = updateSearchList;
+
+      console.log("contract ban ku", searchList);
+    } else if (options) {
+      const newSearchList = await propModel
+        .find({
+          propertyType: options, //PROP TYPE
+        })
+        .populate("userID");
+
+      const updateSearchList = [...searchList, newSearchList];
+      searchList = updateSearchList;
+    }
+
+    //SEARCHING OTHER PROPERTIES
+    const simirlarProperties = await propModel.find();
+
+    //SENDING THE RESULT
     res.status(200).json({ searchList, simirlarProperties });
   } catch (e) {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF SEARCH HOUSES " });
