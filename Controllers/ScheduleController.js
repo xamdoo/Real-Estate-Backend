@@ -28,7 +28,8 @@ const makeSchedule = async (req, res) => {
 
   try {
     const scheduleMade = await ScheduleModel.create(valueToSave);
-    res.status(200).json({ Message: "you've Scheduled" });
+
+    res.status(200).json({ Message: "you've Scheduled", scheduleMade });
   } catch (e) {
     res.status(400).json({ ERROR: "error from  create schedule", e });
     console.log(e);

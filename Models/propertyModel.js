@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const propertySchema = mongoose.Schema(
   {
+    userID: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+    },
     //
     propertyType: {
       required: true,
@@ -17,7 +21,7 @@ const propertySchema = mongoose.Schema(
     //
     squareFT: {
       required: true,
-      type: String,
+      type: Number,
       trim: true,
     },
     //
@@ -32,41 +36,41 @@ const propertySchema = mongoose.Schema(
     },
     //
     balcony: {
-      type: Number,
+      type: Boolean,
+      default: false,
     },
     //
     yearBuilt: {
       required: true,
       type: Number,
     },
+
     //
-    status: {
-      required: true,
+
+    country: {
       type: String,
-      trim: true,
-    },
-    //
-    lift: {
-      type: Number,
-    },
-    //
-    location: {
       required: true,
+    },
+
+    city: {
       type: String,
-      trim: true,
+      required: true,
     },
     //
     descriptionProp: {
       type: String,
       trim: true,
+      default: "waa guri kiro ah oo banaan",
     },
     //
-    refrenceNo: {
+    propertyNo: {
       required: true,
       type: Number,
     },
 
     garage: {
+      type: Boolean,
+      default: false,
       type: Boolean,
       default: false,
     },
@@ -75,36 +79,37 @@ const propertySchema = mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
+      default: "rent",
     },
-    userID: {
-      type: mongoose.Types.ObjectId,
-      ref: "User",
+
+    zipCode: {
+      type: Number,
     },
 
     //AMENITIES
-    FullyFurnished: {
+    fullyFurnished: {
       type: Boolean,
       default: false,
     },
-    QueitSaroudings: {
+    quiteSaroundings: {
       type: Boolean,
       default: false,
     },
-    BathHub: {
+    bathHub: {
       type: Boolean,
       default: false,
     },
-    NoSmookingRooms: {
-      type: Boolean,
-      default: false,
-    },
-
-    FireExtinguish: {
+    noSmookingRooms: {
       type: Boolean,
       default: false,
     },
 
-    HomeSecurity: {
+    fireExtinguish: {
+      type: Boolean,
+      default: false,
+    },
+
+    homeSecurity: {
       type: Boolean,
       default: false,
     },
@@ -114,12 +119,20 @@ const propertySchema = mongoose.Schema(
       default: false,
     },
 
-    HightSpeedWifi: {
+    countractTime: {
+      type: Number,
+      default: 1,
+    },
+    discount: {
+      type: Number,
+      default: 0,
+    },
+    highSpeedWifi: {
       type: Boolean,
       default: false,
     },
 
-    Oven: {
+    oven: {
       type: Boolean,
       default: false,
     },
@@ -128,12 +141,10 @@ const propertySchema = mongoose.Schema(
         public_id: {
           type: String,
           required: true,
-          max: 4,
         },
         url: {
           type: String,
           required: true,
-          max: 4,
         },
       },
     ],

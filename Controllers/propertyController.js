@@ -8,7 +8,22 @@ const houseList = async (req, res) => {
 
   try {
     //GETING ALL THE DATA FROM THE DATABASE
+    //GETING ALL THE DATA FROM THE DATABASE
     const houseList = await propModel.find().sort({ createdAt: -1 });
+    //THEN MAPPING AND FILTERING THE VALUES THAT GOT FROM THE DATABASE
+    houseList
+      .map((types) => types)
+      .filter((e) => {
+        if (e.contract === "rent") {
+          const updateRentHouses = [...rentHouses, e];
+
+          rentHouses = updateRentHouses;
+        } else if (e.contract === "sale") {
+          const updateSaleHouses = [...saleHouses, e];
+
+          saleHouses = updateSaleHouses;
+        }
+      });
     //THEN MAPPING AND FILTERING THE VALUES THAT GOT FROM THE DATABASE
     houseList
       .map((types) => types)
@@ -32,43 +47,71 @@ const houseList = async (req, res) => {
 };
 
 const findSearchedProperties = async (req, res) => {
-  let { options, location, contract } = req.query;
-  //
-  if (!options || !location) {
-    return res.status(401).json({ ERROR: " search somthing " });
-  }
+  let { options, country, contract } = req.query;
 
-  //LOCATION CAPITALIZATION
-  const locat = location.split(" ");
-  //
-  const locationCapital = locat.map((lo) => {
-    return lo.trim().charAt(0).toUpperCase() + lo.slice(1);
-  });
-  const locationCapitalFirstLetter = locationCapital.join("");
+  const toCapitalLetter = (str) => {
+    const CapitalStr = str.split(" ");
 
-  //OPTIONS CAPITALIZATION
-  const opt = options.split(" ");
-  //
-  const opCapital = opt.map((op) => {
-    return op.trim().charAt(0).toUpperCase() + op.slice(1);
-  });
-  const optCapitalFirstLetter = opCapital.join("");
+    return CapitalStr.map((st) => {
+      return st.trim().charAt(0).toUpperCase() + st.slice(1);
+    }).join("");
+  };
 
-  //RE-ASSIGNING THE VARIABLE
-  options = optCapitalFirstLetter;
-  location = locationCapitalFirstLetter;
+  // //RE-ASSIGNING THE VARIABLE
+  options = options ? toCapitalLetter(options) : false;
+  country = country ? toCapitalLetter(country) : false;
 
   try {
-    const searchList = await propModel.find({
-      propertyType: options, //PROP TYPE
-      location: location, //PROP LOCATION
-      contract: contract, ///TYPE OF CONTRACT RENT OR SALE
-    });
+    let searchList = [];
 
-    //FIDNING ANY SIMILAR TO THAT TYPE OF RENT OR SALE FROMT THE USER
-    const simirlarProperties = await propModel.find({ contract: contract }); //IF IT SALE IT SHOULD RECOMEND THE USER ALL SALE HOUSES
+    if (options && country && contract) {
+      const newSearchList = await propModel
+        .find({
+          propertyType: options, //PROP TYPE
+          country: country, //PROP country
+          contract: contract, ///TYPE OF CONTRACT RENT OR SALE
+        })
+        .populate("userID");
 
-    //SENDING THE DATA TO THE FRONT-END
+      const updateSearchList = [...searchList, newSearchList];
+      searchList = updateSearchList;
+
+      console.log("intaba wan ku helay ", searchList);
+    } else if (country) {
+      const newSearchList = await propModel
+        .find({
+          country: country, //PROP COUNTRY
+        })
+        .populate("userID");
+
+      const updateSearchList = [...searchList, newSearchList];
+      searchList = updateSearchList;
+    } else if (contract) {
+      const newSearchList = await propModel
+        .find({
+          contract: contract, ///TYPE OF CONTRACT RENT OR SALE
+        })
+        .populate("userID");
+
+      const updateSearchList = [...searchList, newSearchList];
+      searchList = updateSearchList;
+
+      console.log("contract ban ku", searchList);
+    } else if (options) {
+      const newSearchList = await propModel
+        .find({
+          propertyType: options, //PROP TYPE
+        })
+        .populate("userID");
+
+      const updateSearchList = [...searchList, newSearchList];
+      searchList = updateSearchList;
+    }
+
+    //SEARCHING OTHER PROPERTIES
+    const simirlarProperties = await propModel.find();
+
+    //SENDING THE RESULT
     res.status(200).json({ searchList, simirlarProperties });
   } catch (e) {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF SEARCH HOUSES " });
@@ -81,9 +124,11 @@ const oneHouse = async (req, res) => {
 
   try {
     const oneProp = await propModel.findById(houseID).populate("userID");
+    const recomendHouses = await propModel.find({ userID: oneProp.userID });
+
     res
       .status(200)
-      .json({ oneProp });
+      .json({ MESSAGE: " here is your house", oneProp, recomendHouses });
   } catch {
     res.status(400).json({ ERROR: "ERROR FROM GET-LIST OF HOUSE (one) " });
   }
@@ -91,28 +136,36 @@ const oneHouse = async (req, res) => {
 
 //GET ALL
 
+//GET ALL
+
 const postHouse = async (req, res) => {
+  //
   const {
-    propertyType,
     bedrooms,
-    price,
-    squareFT,
     bathroom,
     yearBuilt,
-    status,
-    location,
-    refrenceNo,
+    addFavorite,
+    squareFT,
+    price,
+    propertyType,
+    city,
+    country,
+    contractTime,
+    discount,
+    propertyNo,
+    zipCode,
     contract,
-    images,
-    //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..."
-
-    HomeSecurity,
+    garage,
+    balcony,
+    fullyFurnished,
+    quiteSaroundings,
+    homeSecurity,
     ACRooms,
-    HightSpeedWifi,
-    /////
-    descriptionProp,
-  } = req.body;
+    oven,
+    bathHub,
+  } = req.body.values;
 
+  //validating if is empty these fields
   if (
     !propertyType ||
     !bedrooms ||
@@ -120,10 +173,9 @@ const postHouse = async (req, res) => {
     !squareFT ||
     !bathroom ||
     !yearBuilt ||
-    !status ||
-    !location ||
-    !refrenceNo ||
-    !contract
+    !country ||
+    !city ||
+    !propertyNo
   ) {
     return res.status(400).json({ ERROR: "please fill the required fields" });
   }
@@ -143,45 +195,44 @@ const postHouse = async (req, res) => {
 
   const capitalizeFirstLetter = capitalizedStr.join(" ");
 
-  //LOCATION CAPITALIZATION
-  const locat = location.split(" ");
+  // //LOCATION CAPITALIZATION
+  const cityCapilization = city.split(" ");
   //
-  const locationCapital = locat.map((lo) => {
-    return lo.trim().charAt(0).toUpperCase() + lo.slice(1);
+  const cityCapital = cityCapilization.map((city) => {
+    return city.trim().charAt(0).toUpperCase() + city.slice(1);
   });
 
-  const locationCapitalFirstLetter = locationCapital.join(" ");
+  const cityCapitalized = cityCapital.join(" ");
 
-  //STATUS CAPITALIZATION
-  const stat = status.split(" ");
+  // // //COUNTRY CAPITALIZATION
+  const countryCapitalization = country.split(" ");
   //
-  const statCapital = stat.map((st) => {
-    return st.trim().charAt(0).toUpperCase() + st.slice(1);
+  const counCapital = countryCapitalization.map((cn) => {
+    return cn.trim().charAt(0).toUpperCase() + cn.slice(1);
   });
 
-  const statusCapitalized = statCapital.join(" ");
+  const countryCapitalized = counCapital.join(" ");
 
   try {
-    let images = [...req.body.images];
+    let newImages = req.body.images;
     let imagesBuffer = [];
-
-    // //LOOPING TO ADD THE ABOVE VARIBALE EVERY IMAGE OF THAT PROPERTY IMAGES TO SAVE ONE TIME
-    for (let i = 0; i < images.length; i++) {
+    //   // //LOOPING TO ADD THE ABOVE VARIBALE EVERY IMAGE OF THAT PROPERTY IMAGES TO SAVE ONE TIME
+    for (let i = 0; i < newImages.length; i++) {
       //UPLOADING THE IMAGES TO CLOUDINARY
-      const result = await cloudinary.uploader.upload(images[i], {
+      const result = await cloudinary.uploader.upload(newImages[i], {
         //FOLDER NAME WILL BE "propertyImages"
-        folder: "Property__Images",
+        folder: "propertyImages",
         // width: 1920,
         crop: "scale",
       });
-
       //PUSHING TO THE IMAGESBUFFER VARIABLE TO GET ONE SETTED IMAGE URL TO SAVE IT
       imagesBuffer.push({
         public_id: result.public_id,
-        url: result.secure_url,
+        url: result.url,
       });
     }
-    // req.body.images = imagesBuffer;
+
+    req.body.images = imagesBuffer;
 
     const valueToCreate = {
       propertyType: capitalizeFirstLetter,
@@ -190,22 +241,28 @@ const postHouse = async (req, res) => {
       squareFT,
       bathroom,
       yearBuilt,
-      status: statusCapitalized,
-      location: locationCapitalFirstLetter,
-      refrenceNo,
+      zipCode,
+      country: countryCapitalized,
+      city: cityCapitalized,
+      propertyNo,
       contract,
       images: imagesBuffer,
+      contractTime,
+      discount,
       //THESE ARE NOT REQUIRED BY DEFAULT THEY WILL BE AUTOMATICALLY FALSE AND THE FRONT-END WILL BE NO AVAILABE "THIS..."
       userID: req.user.id,
-      HomeSecurity,
+      homeSecurity,
       ACRooms,
-      HightSpeedWifi,
-      /////
-      descriptionProp,
+      fullyFurnished,
+      quiteSaroundings,
+      oven,
+      bathHub,
+      garage,
+      balcony,
     };
-
+    //SAVING THE DATA
     const posted = await propModel.create(valueToCreate);
-    res.status(200).json({ sucess: true, posted });
+    res.status(200).json({ MESSAGE: "Submited Successfully", posted });
   } catch (e) {
     res.status(400).json({ ERROR: "ERROR FROM CREATE HOUSE " });
     console.log(e);
@@ -261,36 +318,34 @@ const deleteHouse = async (req, res) => {
   }
 };
 
-
-const getMultipleProperties = async(req, res)=>{
+const getMultipleProperties = async (req, res) => {
   const { propertyIds } = req.query;
   try {
     const props = await propModel.find({ _id: { $in: propertyIds } });
-    res.status(200).json(props)
-  }catch(e){
-    console.log(e)
-    res.status(500).json({message: 'Server Error'})
-  }
-}
-
-// Retrieving Agent Listings 
-const getAgentListings = async (req, res) => {
-  try{
-    const { id } = req.user
-    
-    // Find all properties associated with the logged-in agent
-    const properties = await propModel.find({ userId: id });
-
-    if(!properties){
-      res.status(400).json({message: 'No property'})
-    }
-    res.status(200).json(properties);
-  }catch(e){
-    console.log(e)
-    res.status(500).json({message: 'Server Error'})
+    res.status(200).json(props);
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
+// Retrieving Agent Listings
+const getAgentListings = async (req, res) => {
+  try {
+    const { id } = req.user;
+
+    // Find all properties associated with the logged-in agent
+    const properties = await propModel.find({ userId: id });
+
+    if (!properties) {
+      res.status(400).json({ message: "No property" });
+    }
+    res.status(200).json(properties);
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 
 module.exports = {
   houseList,
@@ -299,6 +354,4 @@ module.exports = {
   updateHouse,
   deleteHouse,
   findSearchedProperties,
-  getMultipleProperties,
-  getAgentListings,
 };
